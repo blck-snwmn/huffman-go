@@ -4,7 +4,8 @@ import "container/heap"
 
 type node struct {
 	left, right *node
-	value       uint
+	value       rune
+	count       uint
 }
 
 type tree []node
@@ -16,7 +17,7 @@ func (t *tree) Len() int {
 
 // Less implements heap.Interface
 func (t *tree) Less(i int, j int) bool {
-	return (*t)[i].value < (*t)[j].value
+	return (*t)[i].count < (*t)[j].count
 }
 
 // Swap implements heap.Interface
