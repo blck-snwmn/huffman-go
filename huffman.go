@@ -39,3 +39,11 @@ func (t *tree) Push(x any) {
 }
 
 var _ heap.Interface = (*tree)(nil)
+
+func count(s string) map[rune]int {
+	m := make(map[rune]int, len(s))
+	for _, r := range s {
+		m[r]++
+	}
+	return m
+}

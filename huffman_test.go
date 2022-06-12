@@ -29,3 +29,15 @@ func TestPriorityQueue(t *testing.T) {
 		t.Errorf("pop=%v, want=%v", got, node{value: 10})
 	}
 }
+
+func Test_count(t *testing.T) {
+	m := count("ccccccaaaabbbccc")
+	want := map[rune]int{
+		'a': 4,
+		'b': 3,
+		'c': 9,
+	}
+	if !reflect.DeepEqual(m, want) {
+		t.Errorf("got=%v, want=%v", m, want)
+	}
+}
