@@ -2,6 +2,8 @@ package huffmango
 
 import (
 	"container/heap"
+	"fmt"
+	"math/bits"
 	"strings"
 )
 
@@ -116,23 +118,29 @@ func buildTree(c []counter) treeNode {
 	return (*t)[0]
 }
 
-func createTable(tn treeNode, prefix string, m map[rune]string) map[rune]string {
+func createTable(tn treeNode, encodedValue uint64, m map[rune]string) map[rune]string {
 	switch tn := tn.(type) {
 	case *node:
+		encodedValue <<= 1
 		if tn.left != nil {
-			mm := createTable(*tn.left, prefix+"0", m)
+			mm := createTable(*tn.left, encodedValue, m)
 			for k, v := range mm {
 				m[k] = v
 			}
 		}
 		if tn.right != nil {
-			mm := createTable(*tn.right, prefix+"1", m)
+			encodedValue |= 1
+			mm := createTable(*tn.right, encodedValue, m)
 			for k, v := range mm {
 				m[k] = v
 			}
 		}
 	case *leaf:
-		m[tn.v] = prefix
+		x := fmt.Sprintf("%064b", encodedValue)[bits.LeadingZeros64(encodedValue):]
+		if x == "" {
+			x = "0"
+		}
+		m[tn.v] = x
 	}
 	return m
 }
@@ -153,7 +161,7 @@ func EncodeWithDecodeTable(s string) (string, map[string]rune) {
 	m := count(s)
 	t := buildTree(m)
 
-	table := createTable(t, "", map[rune]string{})
+	table := createTable(t, 0, map[rune]string{})
 
 	var builder strings.Builder
 	for _, ss := range s {
@@ -161,6 +169,7 @@ func EncodeWithDecodeTable(s string) (string, map[string]rune) {
 	}
 	return builder.String(), createDecodeTable(table)
 }
+
 func Encode(s string) string {
 	result, _ := EncodeWithDecodeTable(s)
 	return result
