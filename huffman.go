@@ -131,10 +131,11 @@ func createTable(tn treeNode, encodedValue uint64, m map[rune]string) {
 			createTable(*tn.right, encodedValue, m)
 		}
 	case *leaf:
-		x := fmt.Sprintf("%064b", encodedValue)[bits.LeadingZeros64(encodedValue):]
-		if x == "" {
-			x = "0"
+		if encodedValue == 0 {
+			m[tn.v] = "0"
+			return
 		}
+		x := fmt.Sprintf("%064b", encodedValue)[bits.LeadingZeros64(encodedValue):]
 		m[tn.v] = x
 	}
 }
