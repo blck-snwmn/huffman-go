@@ -1,43 +1,34 @@
 package huffmango
 
 import (
-	"container/heap"
-	"reflect"
 	"testing"
 )
 
-func TestPriorityQueue(t *testing.T) {
-	ih := &tree{}
-
-	heap.Init(ih)
-	heap.Push(ih, node{count: 4})
-	heap.Push(ih, node{count: 1})
-	heap.Push(ih, node{count: 5})
-	heap.Push(ih, node{count: 10})
-
-	if got := heap.Pop(ih); !reflect.DeepEqual(got, node{count: 1}) {
-		t.Errorf("pop=%v, want=%v", got, node{count: 1})
+func Test_Encode(t *testing.T) {
+	type args struct {
+		s string
 	}
-
-	if got := heap.Pop(ih); !reflect.DeepEqual(got, node{count: 4}) {
-		t.Errorf("pop=%v, want=%v", got, node{count: 4})
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "success",
+			args: args{s: "ADBCBABCBBCE"},
+			want: "1101110010011001000101111",
+		},
+		{
+			name: "empty",
+			args: args{s: ""},
+			want: "",
+		},
 	}
-	if got := heap.Pop(ih); !reflect.DeepEqual(got, node{count: 5}) {
-		t.Errorf("pop=%v, want=%v", got, node{count: 5})
-	}
-	if got := heap.Pop(ih); !reflect.DeepEqual(got, node{count: 10}) {
-		t.Errorf("pop=%v, want=%v", got, node{count: 10})
-	}
-}
-
-func Test_count(t *testing.T) {
-	m := count("ccccccaaaabbbccc")
-	want := map[rune]int{
-		'a': 4,
-		'b': 3,
-		'c': 9,
-	}
-	if !reflect.DeepEqual(m, want) {
-		t.Errorf("got=%v, want=%v", m, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Encode(tt.args.s); got != tt.want {
+				t.Errorf("encode() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
