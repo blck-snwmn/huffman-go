@@ -2,7 +2,6 @@ package huffmango
 
 import (
 	"container/heap"
-	"fmt"
 	"math/bits"
 	"strings"
 )
@@ -135,8 +134,22 @@ func createTable(tn treeNode, encodedValue uint64, m map[rune]string) {
 			m[tn.v] = "0"
 			return
 		}
-		x := fmt.Sprintf("%064b", encodedValue)[bits.LeadingZeros64(encodedValue):]
-		m[tn.v] = x
+
+		var builder strings.Builder
+		builder.Grow(64 - bits.LeadingZeros64(encodedValue))
+
+		// Reverse to add from the beginning
+		rev := bits.Reverse64(encodedValue)
+
+		// Start bits.LeadingZeros64(encodedValue) because first 1 to the end values encodes
+		for i := bits.LeadingZeros64(encodedValue); i < 64; i++ {
+			r := '0'
+			if rev>>i&1 == 1 {
+				r = '1'
+			}
+			builder.WriteRune(r)
+		}
+		m[tn.v] = builder.String()
 	}
 }
 
