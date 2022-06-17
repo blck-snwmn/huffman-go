@@ -173,6 +173,7 @@ func EncodeWithDecodeTable(s string) (string, map[string]rune) {
 	createTable(t, 0, table)
 
 	var builder strings.Builder
+	builder.Grow(len(s))
 	for _, ss := range s {
 		builder.WriteString(table[ss])
 	}
