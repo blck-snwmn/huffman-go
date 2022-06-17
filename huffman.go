@@ -95,7 +95,8 @@ func count(s string) []counter {
 }
 
 func buildTree(c []counter) treeNode {
-	t := &queue{}
+	tt := make(queue, 0, len(c))
+	t := &tt
 	heap.Init(t)
 	for _, v := range c {
 		k, v := v.r, v.count
@@ -118,22 +119,16 @@ func buildTree(c []counter) treeNode {
 	return (*t)[0]
 }
 
-func createTable(tn treeNode, encodedValue uint64, m map[rune]string) map[rune]string {
+func createTable(tn treeNode, encodedValue uint64, m map[rune]string) {
 	switch tn := tn.(type) {
 	case *node:
 		encodedValue <<= 1
 		if tn.left != nil {
-			mm := createTable(*tn.left, encodedValue, m)
-			for k, v := range mm {
-				m[k] = v
-			}
+			createTable(*tn.left, encodedValue, m)
 		}
 		if tn.right != nil {
 			encodedValue |= 1
-			mm := createTable(*tn.right, encodedValue, m)
-			for k, v := range mm {
-				m[k] = v
-			}
+			createTable(*tn.right, encodedValue, m)
 		}
 	case *leaf:
 		x := fmt.Sprintf("%064b", encodedValue)[bits.LeadingZeros64(encodedValue):]
@@ -142,7 +137,6 @@ func createTable(tn treeNode, encodedValue uint64, m map[rune]string) map[rune]s
 		}
 		m[tn.v] = x
 	}
-	return m
 }
 
 func createDecodeTable(m map[rune]string) map[string]rune {
@@ -161,12 +155,14 @@ func EncodeWithDecodeTable(s string) (string, map[string]rune) {
 	m := count(s)
 	t := buildTree(m)
 
-	table := createTable(t, 0, map[rune]string{})
+	table := make(map[rune]string, len(m))
+	createTable(t, 0, table)
 
 	var builder strings.Builder
 	for _, ss := range s {
 		builder.WriteString(table[ss])
 	}
+	// return builder.String(), nil
 	return builder.String(), createDecodeTable(table)
 }
 
