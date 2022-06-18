@@ -2,12 +2,15 @@ package huffmango
 
 import (
 	"container/heap"
+	"fmt"
 	"math/bits"
 	"strings"
 )
 
 type treeNode interface {
 	count() int
+	String() string
+	string(indent string) string
 }
 
 var _ treeNode = (*node)(nil)
@@ -22,6 +25,27 @@ func (n *node) count() int {
 	return n.c
 }
 
+func (n *node) string(indent string) string {
+	var build strings.Builder
+	build.WriteString(fmt.Sprintf("node(%d)\n", n.c))
+	write := func(n *treeNode, ss string) {
+		if n == nil {
+			return
+		}
+		s := fmt.Sprintf("%s|-%s :%s", indent, ss, (*n).string(indent+"\t"))
+		build.WriteString(s)
+	}
+	write(n.left, "l")
+	build.WriteRune('\n')
+	write(n.right, "r")
+
+	return build.String()
+}
+
+func (n *node) String() string {
+	return n.string("")
+}
+
 var _ treeNode = (*leaf)(nil)
 
 type leaf struct {
@@ -34,6 +58,14 @@ func (l *leaf) count() int {
 	return l.c
 }
 
+func (n *leaf) String() string {
+	return fmt.Sprintf("leaf(%s, %d)", string([]rune{n.v}), n.c)
+}
+
+func (n *leaf) string(indent string) string {
+	return n.String()
+}
+
 type queue []treeNode
 
 // Len implements heap.Interface
@@ -43,7 +75,7 @@ func (t *queue) Len() int {
 
 // Less implements heap.Interface
 func (t *queue) Less(i int, j int) bool {
-	return (*t)[i].count() > (*t)[j].count()
+	return (*t)[i].count() < (*t)[j].count()
 }
 
 // Swap implements heap.Interface
@@ -98,51 +130,66 @@ func buildTree(c []counter) treeNode {
 	t := &tt
 	heap.Init(t)
 	for _, v := range c {
-		k, v := v.r, v.count
 		heap.Push(t, &leaf{
-			v: k,
-			c: v,
+			v: v.r,
+			c: v.count,
 		})
 	}
 	for t.Len() > 1 {
 		// t saved in ascending order of appearance
-		hevy := t.Pop().(treeNode)
-		low := t.Pop().(treeNode)
+		low := heap.Pop(t).(treeNode)
+		heavy := heap.Pop(t).(treeNode)
 
-		t.Push(&node{
+		heap.Push(t, &node{
 			left:  &low,
-			right: &hevy, // Save the less frequent `node` on the right side
-			c:     hevy.count() + low.count(),
+			right: &heavy, // Save the less frequent `node` on the right side
+			c:     low.count() + heavy.count(),
 		})
 	}
 	return (*t)[0]
 }
 
-func createTable(tn treeNode, encodedValue uint64, m map[rune]string) {
+type huffmanTable map[rune]string
+
+func (ht huffmanTable) String() string {
+	var builder strings.Builder
+	builder.WriteString("table\n")
+	for k, v := range ht {
+		builder.WriteString(fmt.Sprintf("\t-{%s:%s}\n",
+			string([]rune{k}),
+			v,
+		))
+	}
+	return builder.String()
+}
+
+func createTable(tn treeNode, depth int, encodedValue uint64, m huffmanTable) {
+	depth += 1
 	switch tn := tn.(type) {
 	case *node:
 		encodedValue <<= 1
 		if tn.left != nil {
-			createTable(*tn.left, encodedValue, m)
+			createTable(*tn.left, depth, encodedValue, m)
 		}
 		if tn.right != nil {
 			encodedValue |= 1
-			createTable(*tn.right, encodedValue, m)
+			createTable(*tn.right, depth, encodedValue, m)
 		}
 	case *leaf:
-		if encodedValue == 0 {
+		if depth <= 1 && encodedValue == 0 {
 			m[tn.v] = "0"
 			return
 		}
 
 		var builder strings.Builder
-		builder.Grow(64 - bits.LeadingZeros64(encodedValue))
+		// builder.Grow(64 - bits.LeadingZeros64(encodedValue))
+		builder.Grow(depth)
 
 		// Reverse to add from the beginning
 		rev := bits.Reverse64(encodedValue)
 
 		// Start bits.LeadingZeros64(encodedValue) because first 1 to the end values encodes
-		for i := bits.LeadingZeros64(encodedValue); i < 64; i++ {
+		for i := 64 - depth; i < 64; i++ {
 			r := '0'
 			if rev>>i&1 == 1 {
 				r = '1'
@@ -169,8 +216,11 @@ func EncodeWithDecodeTable(s string) (string, map[string]rune) {
 	m := count(s)
 	t := buildTree(m)
 
-	table := make(map[rune]string, len(m))
-	createTable(t, 0, table)
+	table := make(huffmanTable, len(m))
+	createTable(t, -1, 0, table)
+
+	fmt.Println(t)
+	fmt.Println(table)
 
 	var builder strings.Builder
 	builder.Grow(len(s))
