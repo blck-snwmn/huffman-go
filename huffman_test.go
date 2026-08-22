@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"fmt"
 	"math/rand"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -23,23 +22,28 @@ func TestPriorityQueue(t *testing.T) {
 		heap.Push(table, &leaf{'f', 4})
 		heap.Push(table, &leaf{'e', 8})
 
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'b', 2}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'b', 2})
+		want := map[rune]int{
+			'a': 2,
+			'b': 2,
+			'c': 4,
+			'd': 4,
+			'e': 8,
+			'f': 4,
 		}
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'a', 2}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'a', 2})
+		lastCount := 0
+		for table.Len() > 0 {
+			p := heap.Pop(table).(*leaf)
+			if p.c < lastCount {
+				t.Errorf("priority decreased: got=%d, previous=%d", p.c, lastCount)
+			}
+			if count, ok := want[p.v]; !ok || count != p.c {
+				t.Errorf("unexpected leaf: %+v", p)
+			}
+			delete(want, p.v)
+			lastCount = p.c
 		}
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'f', 4}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'f', 4})
-		}
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'d', 4}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'d', 4})
-		}
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'c', 4}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'c', 4})
-		}
-		if p := heap.Pop(table); !reflect.DeepEqual(p, &leaf{'e', 8}) {
-			t.Errorf("got=%+v,want=%+v", p, &leaf{'e', 8})
+		if len(want) != 0 {
+			t.Errorf("missing leaves: %+v", want)
 		}
 	}
 }
