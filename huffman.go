@@ -63,10 +63,10 @@ func (ht huffmanTable) String() string {
 	var builder strings.Builder
 	builder.WriteString("table\n")
 	for k, v := range ht {
-		builder.WriteString(fmt.Sprintf("\t-{%s:%s}\n",
+		fmt.Fprintf(&builder, "\t-{%s:%s}\n",
 			string([]rune{k}),
 			v,
-		))
+		)
 	}
 	return builder.String()
 }

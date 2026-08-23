@@ -25,7 +25,7 @@ func (n *node) count() int {
 
 func (n *node) string(indent string) string {
 	var build strings.Builder
-	build.WriteString(fmt.Sprintf("node(%d)\n", n.c))
+	fmt.Fprintf(&build, "node(%d)\n", n.c)
 	write := func(n *treeNode, ss string) {
 		if n == nil {
 			return
