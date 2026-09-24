@@ -1,3 +1,3 @@
 module github.com/blck-snwmn/huffman-go
 
-go 1.18
+go 1.27.1
