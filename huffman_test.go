@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 func TestPriorityQueue(t *testing.T) {
@@ -136,8 +135,6 @@ func randString(n int) string {
 	return string(b)
 }
 func BenchmarkEncode(b *testing.B) {
-	rand.Seed(time.Now().UnixNano())
-
 	s := randString(1000)
 
 	m := map[rune]int{}
